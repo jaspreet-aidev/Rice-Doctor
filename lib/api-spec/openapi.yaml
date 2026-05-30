@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: disease
+    description: Rice disease detection
 paths:
   /healthz:
     get:
@@ -24,6 +26,38 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /disease/detect:
+    post:
+      operationId: detectDisease
+      tags: [disease]
+      summary: Detect rice disease from image
+      description: Accepts a base64-encoded rice leaf image and returns disease name, severity, and treatment advice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiseaseDetectInput"
+      responses:
+        "200":
+          description: Detection result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiseaseResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -33,4 +67,70 @@ components:
           type: string
       required:
         - status
-
+    DiseaseDetectInput:
+      type: object
+      required:
+        - imageBase64
+      properties:
+        imageBase64:
+          type: string
+          description: Base64-encoded image data (without data URL prefix)
+        mimeType:
+          type: string
+          description: MIME type of the image (e.g. image/jpeg)
+    DiseaseResult:
+      type: object
+      required:
+        - diseaseName
+        - isHealthy
+        - confidence
+        - treatment
+        - description
+      properties:
+        diseaseName:
+          type: string
+          description: Name of the detected disease, or "Healthy" if no disease found
+        isHealthy:
+          type: boolean
+          description: Whether the rice plant appears healthy
+        confidence:
+          type: string
+          description: Confidence level (High, Medium, Low)
+        severity:
+          type: ["string", "null"]
+          description: Severity of the disease (Mild, Moderate, Severe)
+        description:
+          type: string
+          description: Brief description of the disease or healthy status
+        symptoms:
+          type: array
+          items:
+            type: string
+          description: List of visible symptoms
+        treatment:
+          type: object
+          required:
+            - immediate
+            - chemical
+            - organic
+            - prevention
+          properties:
+            immediate:
+              type: string
+              description: Immediate action to take
+            chemical:
+              type: string
+              description: Chemical treatment recommendation
+            organic:
+              type: string
+              description: Organic/natural treatment recommendation
+            prevention:
+              type: string
+              description: Prevention advice for the future
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
