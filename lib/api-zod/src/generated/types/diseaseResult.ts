@@ -5,27 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-export interface HealthStatus {
-  status: string;
-}
-
-export interface DiseaseDetectInput {
-  /** Base64-encoded image data (without data URL prefix) */
-  imageBase64: string;
-  /** MIME type of the image (e.g. image/jpeg) */
-  mimeType?: string;
-}
-
-export type DiseaseResultTreatment = {
-  /** Immediate action to take */
-  immediate: string;
-  /** Chemical treatment recommendation */
-  chemical: string;
-  /** Organic/natural treatment recommendation */
-  organic: string;
-  /** Prevention advice for the future */
-  prevention: string;
-};
+import type { DiseaseResultTreatment } from './diseaseResultTreatment';
 
 export interface DiseaseResult {
   /** Name of the detected disease, or "Healthy" if no disease found */
@@ -45,8 +25,3 @@ export interface DiseaseResult {
   symptoms?: string[];
   treatment: DiseaseResultTreatment;
 }
-
-export interface ErrorResponse {
-  error: string;
-}
-
