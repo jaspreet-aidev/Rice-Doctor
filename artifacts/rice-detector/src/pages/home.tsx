@@ -376,6 +376,12 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      {/* Footer */}
+      <footer className="mt-10 py-4 px-4 text-center text-xs text-muted-foreground/60 border-t border-border/40">
+        <p>Developed by <span className="font-semibold text-muted-foreground">Jaspreet</span></p>
+        <p className="mt-0.5">Built in rural India 2026</p>
+      </footer>
     </div>
   );
 }
