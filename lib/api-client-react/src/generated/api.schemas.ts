@@ -9,11 +9,24 @@ export interface HealthStatus {
   status: string;
 }
 
+/**
+ * Language for the response (en = English, hi = Hindi)
+ */
+export type DiseaseDetectInputLanguage = typeof DiseaseDetectInputLanguage[keyof typeof DiseaseDetectInputLanguage];
+
+
+export const DiseaseDetectInputLanguage = {
+  en: 'en',
+  hi: 'hi',
+} as const;
+
 export interface DiseaseDetectInput {
   /** Base64-encoded image data (without data URL prefix) */
   imageBase64: string;
   /** MIME type of the image (e.g. image/jpeg) */
   mimeType?: string;
+  /** Language for the response (en = English, hi = Hindi) */
+  language?: DiseaseDetectInputLanguage;
 }
 
 export type DiseaseResultTreatment = {

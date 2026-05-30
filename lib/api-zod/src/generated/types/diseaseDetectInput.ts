@@ -5,10 +5,13 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { DiseaseDetectInputLanguage } from './diseaseDetectInputLanguage';
 
 export interface DiseaseDetectInput {
   /** Base64-encoded image data (without data URL prefix) */
   imageBase64: string;
   /** MIME type of the image (e.g. image/jpeg) */
   mimeType?: string;
+  /** Language for the response (en = English, hi = Hindi) */
+  language?: DiseaseDetectInputLanguage;
 }

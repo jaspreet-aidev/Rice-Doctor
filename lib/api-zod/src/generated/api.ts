@@ -23,7 +23,8 @@ export const HealthCheckResponse = zod.object({
  */
 export const DetectDiseaseBody = zod.object({
   "imageBase64": zod.string().describe('Base64-encoded image data (without data URL prefix)'),
-  "mimeType": zod.string().optional().describe('MIME type of the image (e.g. image\/jpeg)')
+  "mimeType": zod.string().optional().describe('MIME type of the image (e.g. image\/jpeg)'),
+  "language": zod.enum(['en', 'hi']).optional().describe('Language for the response (en = English, hi = Hindi)')
 })
 
 export const DetectDiseaseResponse = zod.object({

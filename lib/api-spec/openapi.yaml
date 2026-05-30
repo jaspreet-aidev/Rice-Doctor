@@ -78,6 +78,10 @@ components:
         mimeType:
           type: string
           description: MIME type of the image (e.g. image/jpeg)
+        language:
+          type: string
+          enum: [en, hi]
+          description: Language for the response (en = English, hi = Hindi)
     DiseaseResult:
       type: object
       required:

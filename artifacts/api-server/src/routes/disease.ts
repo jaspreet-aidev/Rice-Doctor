@@ -11,9 +11,33 @@ router.post("/disease/detect", async (req, res): Promise<void> => {
     return;
   }
 
-  const { imageBase64, mimeType = "image/jpeg" } = parsed.data;
+  const { imageBase64, mimeType = "image/jpeg", language = "en" } = parsed.data;
 
-  const prompt = `You are an expert agricultural scientist specializing in rice diseases in India. Analyze this rice plant image and identify any diseases present.
+  const isHindi = language === "hi";
+
+  const prompt = isHindi
+    ? `आप भारत में चावल की बीमारियों के विशेषज्ञ कृषि वैज्ञानिक हैं। इस चावल के पौधे की छवि का विश्लेषण करें और किसी भी बीमारी की पहचान करें।
+
+केवल इस सटीक JSON प्रारूप में उत्तर दें:
+{
+  "diseaseName": "बीमारी का नाम हिंदी में, या 'स्वस्थ चावल का पौधा'",
+  "isHealthy": true या false,
+  "confidence": "उच्च" या "मध्यम" या "कम",
+  "severity": "हल्की" या "मध्यम" या "गंभीर" या null,
+  "description": "1-2 वाक्यों में विवरण हिंदी में",
+  "symptoms": ["लक्षण 1", "लक्षण 2"],
+  "treatment": {
+    "immediate": "किसान को तुरंत क्या करना चाहिए",
+    "chemical": "रासायनिक दवा का सुझाव (नाम सहित)",
+    "organic": "स्थानीय सामग्री से प्राकृतिक उपचार",
+    "prevention": "अगली फसल में रोकथाम के उपाय"
+  }
+}
+
+भारत में चावल की सामान्य बीमारियाँ: ब्लास्ट (झुलसा), भूरा धब्बा, जीवाणु झुलसा, शीथ ब्लाइट, झूठी कंड, नेक रॉट, टुंग्रो वायरस।
+
+यदि पौधा स्वस्थ है, तो isHealthy को true रखें, severity को null, और treatment में देखभाल की सलाह दें।`
+    : `You are an expert agricultural scientist specializing in rice diseases in India. Analyze this rice plant image and identify any diseases present.
 
 Respond ONLY with a valid JSON object in this exact format:
 {
