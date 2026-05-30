@@ -1,0 +1,21 @@
+# Rice Doctor 🌾
+
+AI-powered rice disease detector
+for Indian farmers.
+
+Built by Jaspreet — Rural India 2026
+Self-taught developer, no degree.
+
+## Why I Built This
+Farmers near my village lose crops
+to diseases they cannot identify.
+This app detects rice diseases from
+a photo — works in Hindi too.
+
+## Built With
+- TypeScript
+- AI disease detection
+- Hindi language support
+
+## Status
+Day 1 complete — May 30, 2026
