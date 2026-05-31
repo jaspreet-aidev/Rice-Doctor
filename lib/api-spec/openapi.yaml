@@ -82,55 +82,77 @@ components:
           type: string
           enum: [en, hi]
           description: Language for the response (en = English, hi = Hindi)
+    TreatmentAdvice:
+      type: object
+      required:
+        - immediate
+        - chemical
+        - organic
+        - prevention
+      properties:
+        immediate:
+          type: string
+        chemical:
+          type: string
+        organic:
+          type: string
+        prevention:
+          type: string
     DiseaseResult:
       type: object
       required:
         - diseaseName
+        - diseaseNameHi
         - isHealthy
         - confidence
         - treatment
+        - treatmentHi
         - description
+        - descriptionHi
+        - symptoms
+        - symptomsHi
       properties:
         diseaseName:
           type: string
-          description: Name of the detected disease, or "Healthy" if no disease found
+          description: Name of the detected disease in English
+        diseaseNameHi:
+          type: string
+          description: Name of the detected disease in Hindi
         isHealthy:
           type: boolean
           description: Whether the rice plant appears healthy
         confidence:
           type: string
-          description: Confidence level (High, Medium, Low)
+          description: Confidence level (High / Medium / Low)
         severity:
           type: ["string", "null"]
           description: Severity of the disease (Mild, Moderate, Severe)
         description:
           type: string
-          description: Brief description of the disease or healthy status
+          description: Brief description in English
+        descriptionHi:
+          type: string
+          description: Brief description in Hindi
         symptoms:
           type: array
           items:
             type: string
-          description: List of visible symptoms
+          description: List of visible symptoms in English
+        symptomsHi:
+          type: array
+          items:
+            type: string
+          description: List of visible symptoms in Hindi
         treatment:
-          type: object
-          required:
-            - immediate
-            - chemical
-            - organic
-            - prevention
-          properties:
-            immediate:
-              type: string
-              description: Immediate action to take
-            chemical:
-              type: string
-              description: Chemical treatment recommendation
-            organic:
-              type: string
-              description: Organic/natural treatment recommendation
-            prevention:
-              type: string
-              description: Prevention advice for the future
+          $ref: "#/components/schemas/TreatmentAdvice"
+        treatmentHi:
+          $ref: "#/components/schemas/TreatmentAdvice"
+        plantNetSpecies:
+          type: ["string", "null"]
+          description: Scientific species name from PlantNet identification
+        plantNetScore:
+          type: ["number", "null"]
+          description: PlantNet identification confidence score (0-1)
     ErrorResponse:
       type: object
       required:

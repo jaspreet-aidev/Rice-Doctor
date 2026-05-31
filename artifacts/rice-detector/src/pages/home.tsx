@@ -18,11 +18,12 @@ import {
   RefreshCcw,
   CheckCircle2,
   Languages,
+  FlaskConical,
 } from "lucide-react";
 
 type Lang = "en" | "hi";
 
-const t = {
+const ui = {
   en: {
     appName: "Kisan Mitra",
     appSubtitle: "Rice crop field companion",
@@ -30,14 +31,14 @@ const t = {
     uploadTitle: "Upload crop photo",
     uploadDesc: "Take a clear photo of the rice leaf to detect any diseases.",
     uploadBtn: "Take or select photo",
-    trustLine1: "Expert agronomy AI",
+    trustLine1: "PlantNet + AI powered",
     trustLine2: "Instant results",
     readyTitle: "Ready to analyze",
     readyDesc: "Make sure the leaf is clearly visible.",
     retake: "Retake",
     scanNow: "Scan now",
-    analyzingTitle: "Analyzing crop health...",
-    analyzingDesc: "Consulting the expert database.",
+    detectingMsg: "Detecting disease...",
+    detectingDesc: "Sending to PlantNet & AI analysis engine.",
     errorTitle: "Analysis Failed",
     errorDesc: "We couldn't analyze this image. Please try again with a clearer photo.",
     tryAgain: "Try again",
@@ -46,6 +47,7 @@ const t = {
     diseased: "Diseased",
     severity: (s: string) => `${s} Severity`,
     confidence: (c: string) => `${c} Confidence`,
+    plantId: "Plant identified by PlantNet",
     symptoms: "Visible Symptoms",
     treatmentPlan: "Treatment Plan",
     immediate: "Immediate Action",
@@ -53,6 +55,7 @@ const t = {
     organic: "Organic",
     prevention: "Prevention",
     scanAnother: "Scan another plant",
+    hindiSection: "हिंदी में जानकारी",
   },
   hi: {
     appName: "किसान मित्र",
@@ -61,14 +64,14 @@ const t = {
     uploadTitle: "फसल की फोटो अपलोड करें",
     uploadDesc: "रोग पहचान के लिए धान के पत्ते की स्पष्ट फोटो लें।",
     uploadBtn: "फोटो लें या चुनें",
-    trustLine1: "विशेषज्ञ कृषि AI",
+    trustLine1: "PlantNet + AI द्वारा संचालित",
     trustLine2: "तुरंत परिणाम",
     readyTitle: "विश्लेषण के लिए तैयार",
     readyDesc: "सुनिश्चित करें कि पत्ता स्पष्ट दिख रहा हो।",
     retake: "दोबारा लें",
     scanNow: "अभी जांचें",
-    analyzingTitle: "फसल की जांच हो रही है...",
-    analyzingDesc: "विशेषज्ञ डेटाबेस से जांच हो रही है।",
+    detectingMsg: "रोग की पहचान हो रही है...",
+    detectingDesc: "PlantNet और AI विश्लेषण इंजन को भेजा जा रहा है।",
     errorTitle: "विश्लेषण विफल",
     errorDesc: "इस फोटो का विश्लेषण नहीं हो सका। कृपया साफ फोटो से दोबारा कोशिश करें।",
     tryAgain: "दोबारा कोशिश करें",
@@ -77,6 +80,7 @@ const t = {
     diseased: "रोगग्रस्त",
     severity: (s: string) => `${s} गंभीरता`,
     confidence: (c: string) => `${c} विश्वास`,
+    plantId: "PlantNet द्वारा पहचान",
     symptoms: "दिखाई देने वाले लक्षण",
     treatmentPlan: "उपचार योजना",
     immediate: "तुरंत करें",
@@ -84,6 +88,7 @@ const t = {
     organic: "जैविक उपचार",
     prevention: "रोकथाम",
     scanAnother: "दूसरे पौधे की जांच करें",
+    hindiSection: "English Information",
   },
 } as const;
 
@@ -93,28 +98,24 @@ export default function Home() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const tx = t[lang];
+  const tx = ui[lang];
   const detectDisease = useDetectDisease();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setImageFile(file);
-    const objectUrl = URL.createObjectURL(file);
-    setSelectedImage(objectUrl);
+    setSelectedImage(URL.createObjectURL(file));
   };
 
   const handleScan = () => {
     if (!imageFile) return;
     const reader = new FileReader();
     reader.onload = (e) => {
-      const result = e.target?.result as string;
-      if (!result) return;
-      const base64Data = result.split(",")[1];
-      const mimeType = imageFile.type;
-      detectDisease.mutate({
-        data: { imageBase64: base64Data, mimeType, language: lang },
-      });
+      const dataUrl = e.target?.result as string;
+      if (!dataUrl) return;
+      const base64Data = dataUrl.split(",")[1];
+      detectDisease.mutate({ data: { imageBase64: base64Data, mimeType: imageFile.type } });
     };
     reader.readAsDataURL(imageFile);
   };
@@ -126,15 +127,23 @@ export default function Home() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const toggleLang = () => {
-    setLang((l) => (l === "en" ? "hi" : "en"));
-    resetScan();
-  };
+  const toggleLang = () => setLang((l) => (l === "en" ? "hi" : "en"));
 
   const isLoading = detectDisease.isPending;
   const result = detectDisease.data;
   const isError = detectDisease.isError;
   const error = detectDisease.error;
+
+  // Pick bilingual values based on active lang
+  const diseaseName  = lang === "hi" ? result?.diseaseNameHi  : result?.diseaseName;
+  const description  = lang === "hi" ? result?.descriptionHi  : result?.description;
+  const symptoms     = lang === "hi" ? result?.symptomsHi     : result?.symptoms;
+  const treatment    = lang === "hi" ? result?.treatmentHi    : result?.treatment;
+  // The "other" language for the secondary panel
+  const altName      = lang === "hi" ? result?.diseaseName    : result?.diseaseNameHi;
+  const altDesc      = lang === "hi" ? result?.description    : result?.descriptionHi;
+  const altSymptoms  = lang === "hi" ? result?.symptoms       : result?.symptomsHi;
+  const altTreatment = lang === "hi" ? result?.treatment      : result?.treatmentHi;
 
   return (
     <div className="min-h-[100dvh] w-full bg-background pb-12">
@@ -151,12 +160,9 @@ export default function Home() {
               <p className="text-primary-foreground/80 text-xs font-medium">{tx.appSubtitle}</p>
             </div>
           </div>
-
-          {/* Language Toggle */}
           <button
             onClick={toggleLang}
             className="flex items-center gap-1.5 bg-primary-foreground/15 hover:bg-primary-foreground/25 transition-colors px-3 py-1.5 rounded-full text-sm font-semibold text-primary-foreground"
-            aria-label="Switch language"
           >
             <Languages className="w-4 h-4" />
             {tx.langToggle}
@@ -191,7 +197,6 @@ export default function Home() {
                 />
               </CardContent>
             </Card>
-
             <div className="mt-8 flex gap-4 text-sm text-muted-foreground justify-center items-center">
               <ShieldCheck className="w-5 h-5 text-primary" />
               <span>{tx.trustLine1}</span>
@@ -205,11 +210,11 @@ export default function Home() {
         {selectedImage && !isLoading && !result && !isError && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
             <Card className="overflow-hidden shadow-sm">
-              <div className="aspect-4/3 w-full bg-black/5 relative">
+              <div className="aspect-4/3 w-full bg-black/5">
                 <img src={selectedImage} alt="Crop preview" className="w-full h-full object-cover" />
               </div>
               <CardContent className="p-6">
-                <h3 className="font-semibold text-lg mb-2">{tx.readyTitle}</h3>
+                <h3 className="font-semibold text-lg mb-1">{tx.readyTitle}</h3>
                 <p className="text-muted-foreground text-sm mb-6">{tx.readyDesc}</p>
                 <div className="flex gap-3">
                   <Button variant="outline" size="lg" className="flex-1" onClick={resetScan}>
@@ -231,13 +236,14 @@ export default function Home() {
               <div className="w-24 h-24 border-4 border-primary/20 rounded-full" />
               <div className="w-24 h-24 border-4 border-primary rounded-full border-t-transparent animate-spin absolute inset-0" />
               <div className="absolute inset-0 flex items-center justify-center text-primary">
-                <Activity className="w-8 h-8 animate-pulse" />
+                <FlaskConical className="w-8 h-8 animate-pulse" />
               </div>
             </div>
-            <h3 className="text-xl font-bold text-foreground mb-2">{tx.analyzingTitle}</h3>
-            <p className="text-muted-foreground">{tx.analyzingDesc}</p>
-            <div className="w-full max-w-sm mt-8 space-y-4">
+            <h3 className="text-xl font-bold text-foreground mb-1">{tx.detectingMsg}</h3>
+            <p className="text-muted-foreground text-sm">{tx.detectingDesc}</p>
+            <div className="w-full max-w-sm mt-8 space-y-3">
               <Skeleton className="h-24 w-full rounded-xl" />
+              <Skeleton className="h-16 w-full rounded-xl" />
               <Skeleton className="h-16 w-full rounded-xl" />
             </div>
           </div>
@@ -265,107 +271,169 @@ export default function Home() {
 
         {/* Results State */}
         {result && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-500">
+          <div className="space-y-5 animate-in fade-in slide-in-from-bottom-8 duration-500">
+
+            {/* Hero card with image + disease name */}
             <Card className="overflow-hidden shadow-md border-primary/10">
               <div className="aspect-video w-full bg-black/5 relative">
                 <img src={selectedImage!} alt="Scanned crop" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-                  <div>
-                    <div className="flex gap-2 mb-2 flex-wrap">
-                      {result.isHealthy ? (
-                        <Badge className="bg-primary text-primary-foreground text-sm px-3 py-1 font-semibold flex items-center gap-1.5 shadow-sm">
-                          <CheckCircle2 className="w-4 h-4" /> {tx.healthy}
-                        </Badge>
-                      ) : (
-                        <Badge variant="destructive" className="bg-destructive text-destructive-foreground text-sm px-3 py-1 font-semibold flex items-center gap-1.5 shadow-sm">
-                          <AlertCircle className="w-4 h-4" /> {tx.diseased}
-                        </Badge>
-                      )}
-                      {result.severity && !result.isHealthy && (
-                        <Badge variant="secondary" className="text-sm px-3 py-1 font-medium bg-amber-500/90 text-white shadow-sm border-0">
-                          {tx.severity(result.severity)}
-                        </Badge>
-                      )}
-                    </div>
-                    <h2 className="text-white text-2xl font-extrabold tracking-tight leading-tight">
-                      {result.diseaseName}
-                    </h2>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/65 to-transparent" />
+                <div className="absolute bottom-4 left-4 right-4">
+                  <div className="flex gap-2 mb-2 flex-wrap">
+                    {result.isHealthy ? (
+                      <Badge className="bg-primary text-primary-foreground text-sm px-3 py-1 font-semibold flex items-center gap-1.5 shadow-sm">
+                        <CheckCircle2 className="w-4 h-4" /> {tx.healthy}
+                      </Badge>
+                    ) : (
+                      <Badge variant="destructive" className="text-sm px-3 py-1 font-semibold flex items-center gap-1.5 shadow-sm">
+                        <AlertCircle className="w-4 h-4" /> {tx.diseased}
+                      </Badge>
+                    )}
+                    {result.severity && !result.isHealthy && (
+                      <Badge className="text-sm px-3 py-1 font-medium bg-amber-500/90 text-white shadow-sm border-0">
+                        {tx.severity(result.severity)}
+                      </Badge>
+                    )}
                   </div>
+                  <h2 className="text-white text-2xl font-extrabold tracking-tight leading-tight">
+                    {diseaseName}
+                  </h2>
+                  {/* Secondary language name */}
+                  {altName && (
+                    <p className="text-white/75 text-base font-medium mt-0.5">{altName}</p>
+                  )}
                 </div>
               </div>
 
-              <CardContent className="p-5 sm:p-6">
-                <div className="flex items-center gap-2 mb-4 text-sm font-medium text-muted-foreground">
+              <CardContent className="p-5 sm:p-6 space-y-5">
+
+                {/* Confidence + PlantNet badge */}
+                <div className="flex flex-wrap gap-2 text-sm font-medium text-muted-foreground">
                   <span className="flex items-center gap-1 bg-muted px-2 py-1 rounded-md">
                     <Activity className="w-4 h-4" /> {tx.confidence(result.confidence)}
                   </span>
+                  {result.plantNetSpecies && (
+                    <span className="flex items-center gap-1 bg-muted px-2 py-1 rounded-md">
+                      <Leaf className="w-4 h-4 text-primary" />
+                      {tx.plantId}: <span className="italic ml-1">{result.plantNetSpecies}</span>
+                      {result.plantNetScore != null && (
+                        <span className="ml-1 text-xs text-muted-foreground/70">
+                          ({(result.plantNetScore * 100).toFixed(0)}%)
+                        </span>
+                      )}
+                    </span>
+                  )}
                 </div>
 
-                <p className="text-base text-foreground/90 leading-relaxed mb-6">
-                  {result.description}
-                </p>
+                {/* Primary language description */}
+                <p className="text-base text-foreground/90 leading-relaxed">{description}</p>
 
-                {result.symptoms && result.symptoms.length > 0 && (
-                  <div className="mb-8">
-                    <h4 className="font-bold text-foreground mb-3 flex items-center gap-2 text-lg">
-                      <Leaf className="w-5 h-5 text-primary" />
-                      {tx.symptoms}
+                {/* Symptoms */}
+                {symptoms && symptoms.length > 0 && (
+                  <div>
+                    <h4 className="font-bold text-foreground mb-3 flex items-center gap-2 text-base">
+                      <Leaf className="w-4 h-4 text-primary" /> {tx.symptoms}
                     </h4>
-                    <ul className="space-y-2">
-                      {result.symptoms.map((symptom: string, idx: number) => (
-                        <li key={idx} className="flex items-start gap-2.5">
+                    <ul className="space-y-1.5">
+                      {symptoms.map((s: string, i: number) => (
+                        <li key={i} className="flex items-start gap-2.5">
                           <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                          <span className="text-foreground/80">{symptom}</span>
+                          <span className="text-foreground/80 text-sm">{s}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
 
-                <div className="space-y-4">
-                  <h4 className="font-bold text-foreground text-lg border-b pb-2">{tx.treatmentPlan}</h4>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Card className="bg-destructive/5 border-destructive/20 shadow-none">
-                      <CardContent className="p-4">
-                        <h5 className="font-semibold text-destructive flex items-center gap-2 mb-2">
-                          <ShieldAlert className="w-4 h-4" /> {tx.immediate}
-                        </h5>
-                        <p className="text-sm text-foreground/80">{result.treatment.immediate}</p>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-blue-500/5 border-blue-500/20 shadow-none">
-                      <CardContent className="p-4">
-                        <h5 className="font-semibold text-blue-700 flex items-center gap-2 mb-2">
-                          <Droplet className="w-4 h-4" /> {tx.chemical}
-                        </h5>
-                        <p className="text-sm text-foreground/80">{result.treatment.chemical}</p>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-primary/5 border-primary/20 shadow-none">
-                      <CardContent className="p-4">
-                        <h5 className="font-semibold text-primary flex items-center gap-2 mb-2">
-                          <Leaf className="w-4 h-4" /> {tx.organic}
-                        </h5>
-                        <p className="text-sm text-foreground/80">{result.treatment.organic}</p>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-amber-500/5 border-amber-500/20 shadow-none">
-                      <CardContent className="p-4">
-                        <h5 className="font-semibold text-amber-700 flex items-center gap-2 mb-2">
-                          <Sun className="w-4 h-4" /> {tx.prevention}
-                        </h5>
-                        <p className="text-sm text-foreground/80">{result.treatment.prevention}</p>
-                      </CardContent>
-                    </Card>
+                {/* Treatment Plan — primary language */}
+                {treatment && (
+                  <div className="space-y-3">
+                    <h4 className="font-bold text-foreground text-base border-b pb-2">{tx.treatmentPlan}</h4>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Card className="bg-destructive/5 border-destructive/20 shadow-none">
+                        <CardContent className="p-4">
+                          <h5 className="font-semibold text-destructive flex items-center gap-2 mb-2 text-sm">
+                            <ShieldAlert className="w-4 h-4" /> {tx.immediate}
+                          </h5>
+                          <p className="text-sm text-foreground/80">{treatment.immediate}</p>
+                        </CardContent>
+                      </Card>
+                      <Card className="bg-blue-500/5 border-blue-500/20 shadow-none">
+                        <CardContent className="p-4">
+                          <h5 className="font-semibold text-blue-700 flex items-center gap-2 mb-2 text-sm">
+                            <Droplet className="w-4 h-4" /> {tx.chemical}
+                          </h5>
+                          <p className="text-sm text-foreground/80">{treatment.chemical}</p>
+                        </CardContent>
+                      </Card>
+                      <Card className="bg-primary/5 border-primary/20 shadow-none">
+                        <CardContent className="p-4">
+                          <h5 className="font-semibold text-primary flex items-center gap-2 mb-2 text-sm">
+                            <Leaf className="w-4 h-4" /> {tx.organic}
+                          </h5>
+                          <p className="text-sm text-foreground/80">{treatment.organic}</p>
+                        </CardContent>
+                      </Card>
+                      <Card className="bg-amber-500/5 border-amber-500/20 shadow-none">
+                        <CardContent className="p-4">
+                          <h5 className="font-semibold text-amber-700 flex items-center gap-2 mb-2 text-sm">
+                            <Sun className="w-4 h-4" /> {tx.prevention}
+                          </h5>
+                          <p className="text-sm text-foreground/80">{treatment.prevention}</p>
+                        </CardContent>
+                      </Card>
+                    </div>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
+
+            {/* Secondary language panel */}
+            {(altDesc || (altSymptoms && altSymptoms.length > 0) || altTreatment) && (
+              <Card className="border-primary/20 shadow-sm">
+                <CardContent className="p-5 sm:p-6 space-y-4">
+                  <h4 className="font-bold text-primary text-base flex items-center gap-2 border-b pb-2">
+                    <Languages className="w-4 h-4" /> {tx.hindiSection}
+                  </h4>
+
+                  {altDesc && (
+                    <p className="text-sm text-foreground/80 leading-relaxed">{altDesc}</p>
+                  )}
+
+                  {altSymptoms && altSymptoms.length > 0 && (
+                    <ul className="space-y-1.5">
+                      {altSymptoms.map((s: string, i: number) => (
+                        <li key={i} className="flex items-start gap-2.5">
+                          <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary/60 shrink-0" />
+                          <span className="text-foreground/75 text-sm">{s}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {altTreatment && (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="bg-destructive/5 rounded-lg p-3 border border-destructive/15">
+                        <p className="text-xs font-semibold text-destructive mb-1">{lang === "hi" ? "Immediate" : "तुरंत करें"}</p>
+                        <p className="text-sm text-foreground/75">{altTreatment.immediate}</p>
+                      </div>
+                      <div className="bg-blue-500/5 rounded-lg p-3 border border-blue-500/15">
+                        <p className="text-xs font-semibold text-blue-700 mb-1">{lang === "hi" ? "Chemical" : "रासायनिक"}</p>
+                        <p className="text-sm text-foreground/75">{altTreatment.chemical}</p>
+                      </div>
+                      <div className="bg-primary/5 rounded-lg p-3 border border-primary/15">
+                        <p className="text-xs font-semibold text-primary mb-1">{lang === "hi" ? "Organic" : "जैविक"}</p>
+                        <p className="text-sm text-foreground/75">{altTreatment.organic}</p>
+                      </div>
+                      <div className="bg-amber-500/5 rounded-lg p-3 border border-amber-500/15">
+                        <p className="text-xs font-semibold text-amber-700 mb-1">{lang === "hi" ? "Prevention" : "रोकथाम"}</p>
+                        <p className="text-sm text-foreground/75">{altTreatment.prevention}</p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             <div className="pb-8">
               <Button size="lg" className="w-full text-lg font-bold py-6 shadow-md" onClick={resetScan}>

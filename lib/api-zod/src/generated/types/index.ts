@@ -9,6 +9,6 @@
 export * from './diseaseDetectInput';
 export * from './diseaseDetectInputLanguage';
 export * from './diseaseResult';
-export * from './diseaseResultTreatment';
 export * from './errorResponse';
 export * from './healthStatus';
+export * from './treatmentAdvice';

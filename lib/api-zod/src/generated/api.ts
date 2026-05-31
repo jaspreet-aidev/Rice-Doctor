@@ -28,18 +28,29 @@ export const DetectDiseaseBody = zod.object({
 })
 
 export const DetectDiseaseResponse = zod.object({
-  "diseaseName": zod.string().describe('Name of the detected disease, or \"Healthy\" if no disease found'),
+  "diseaseName": zod.string().describe('Name of the detected disease in English'),
+  "diseaseNameHi": zod.string().describe('Name of the detected disease in Hindi'),
   "isHealthy": zod.boolean().describe('Whether the rice plant appears healthy'),
-  "confidence": zod.string().describe('Confidence level (High, Medium, Low)'),
+  "confidence": zod.string().describe('Confidence level (High \/ Medium \/ Low)'),
   "severity": zod.string().nullish().describe('Severity of the disease (Mild, Moderate, Severe)'),
-  "description": zod.string().describe('Brief description of the disease or healthy status'),
-  "symptoms": zod.array(zod.string()).optional().describe('List of visible symptoms'),
+  "description": zod.string().describe('Brief description in English'),
+  "descriptionHi": zod.string().describe('Brief description in Hindi'),
+  "symptoms": zod.array(zod.string()).describe('List of visible symptoms in English'),
+  "symptomsHi": zod.array(zod.string()).describe('List of visible symptoms in Hindi'),
   "treatment": zod.object({
-  "immediate": zod.string().describe('Immediate action to take'),
-  "chemical": zod.string().describe('Chemical treatment recommendation'),
-  "organic": zod.string().describe('Organic\/natural treatment recommendation'),
-  "prevention": zod.string().describe('Prevention advice for the future')
-})
+  "immediate": zod.string(),
+  "chemical": zod.string(),
+  "organic": zod.string(),
+  "prevention": zod.string()
+}),
+  "treatmentHi": zod.object({
+  "immediate": zod.string(),
+  "chemical": zod.string(),
+  "organic": zod.string(),
+  "prevention": zod.string()
+}),
+  "plantNetSpecies": zod.string().nullish().describe('Scientific species name from PlantNet identification'),
+  "plantNetScore": zod.number().nullish().describe('PlantNet identification confidence score (0-1)')
 })
 
 

@@ -5,23 +5,40 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { DiseaseResultTreatment } from './diseaseResultTreatment';
+import type { TreatmentAdvice } from './treatmentAdvice';
 
 export interface DiseaseResult {
-  /** Name of the detected disease, or "Healthy" if no disease found */
+  /** Name of the detected disease in English */
   diseaseName: string;
+  /** Name of the detected disease in Hindi */
+  diseaseNameHi: string;
   /** Whether the rice plant appears healthy */
   isHealthy: boolean;
-  /** Confidence level (High, Medium, Low) */
+  /** Confidence level (High / Medium / Low) */
   confidence: string;
   /**
      * Severity of the disease (Mild, Moderate, Severe)
      * @nullable
      */
   severity?: string | null;
-  /** Brief description of the disease or healthy status */
+  /** Brief description in English */
   description: string;
-  /** List of visible symptoms */
-  symptoms?: string[];
-  treatment: DiseaseResultTreatment;
+  /** Brief description in Hindi */
+  descriptionHi: string;
+  /** List of visible symptoms in English */
+  symptoms: string[];
+  /** List of visible symptoms in Hindi */
+  symptomsHi: string[];
+  treatment: TreatmentAdvice;
+  treatmentHi: TreatmentAdvice;
+  /**
+     * Scientific species name from PlantNet identification
+     * @nullable
+     */
+  plantNetSpecies?: string | null;
+  /**
+     * PlantNet identification confidence score (0-1)
+     * @nullable
+     */
+  plantNetScore?: number | null;
 }
