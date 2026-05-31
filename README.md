@@ -19,3 +19,23 @@ a photo — works in Hindi too.
 
 ## Status
 Day 1 complete — May 30, 2026
+
+## Day 2 Update — May 31, 2026
+→ Connected PlantNet AI API
+→ App now detects real rice diseases
+→ Brown Spot detected with HIGH confidence
+→ Scientific name shown
+→ Treatment plan shown
+→ Severity level shown
+
+## Live Demo Result
+Detected: Brown Spot 
+(Helminthosporium oryzae)
+Confidence: HIGH
+Severity: Moderate
+Treatment: Chemical + Organic options
+
+## Next Steps
+→ Offline Android app
+→ Real farmer testing
+→ Research paper
