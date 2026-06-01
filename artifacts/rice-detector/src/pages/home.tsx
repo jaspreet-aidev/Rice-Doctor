@@ -19,7 +19,48 @@ import {
   CheckCircle2,
   Languages,
   FlaskConical,
+  ShoppingBag,
+  IndianRupee,
 } from "lucide-react";
+
+interface Medicine {
+  name: string;
+  price: string;
+}
+
+const MEDICINE_MAP: Array<{ keywords: string[]; medicines: Medicine[] }> = [
+  {
+    keywords: ["brown spot", "helminthosporium", "भूरा धब्बा"],
+    medicines: [
+      { name: "Mancozeb 75% WP", price: "₹150–200" },
+      { name: "Tebuconazole 25% EC", price: "₹200–250" },
+    ],
+  },
+  {
+    keywords: ["blast", "magnaporthe", "झुलसा"],
+    medicines: [
+      { name: "Tricyclazole 75% WP", price: "₹180–220" },
+      { name: "Isoprothiolane 40% EC", price: "₹150–200" },
+    ],
+  },
+  {
+    keywords: ["bacterial blight", "xanthomonas", "जीवाणु झुलसा"],
+    medicines: [
+      { name: "Streptomycin Sulphate", price: "₹100–150" },
+      { name: "Copper Oxychloride", price: "₹120–160" },
+    ],
+  },
+];
+
+function getMedicines(diseaseName: string): Medicine[] | null {
+  const lower = diseaseName.toLowerCase();
+  for (const entry of MEDICINE_MAP) {
+    if (entry.keywords.some((k) => lower.includes(k))) {
+      return entry.medicines;
+    }
+  }
+  return null;
+}
 
 type Lang = "en" | "hi";
 
@@ -56,6 +97,9 @@ const ui = {
     prevention: "Prevention",
     scanAnother: "Scan another plant",
     hindiSection: "हिंदी में जानकारी",
+    whereToBuy: "Where to Buy",
+    whereToBuyDesc: "Available at local Krishi Seva Kendra or agri shop",
+    approxPrice: "Approx. price",
   },
   hi: {
     appName: "किसान मित्र",
@@ -89,6 +133,9 @@ const ui = {
     prevention: "रोकथाम",
     scanAnother: "दूसरे पौधे की जांच करें",
     hindiSection: "English Information",
+    whereToBuy: "कहाँ से खरीदें",
+    whereToBuyDesc: "नजदीकी कृषि सेवा केंद्र या एग्री शॉप पर उपलब्ध",
+    approxPrice: "अनुमानित कीमत",
   },
 } as const;
 
@@ -135,6 +182,7 @@ export default function Home() {
   const error = detectDisease.error;
 
   // Pick bilingual values based on active lang
+  const medicines = result ? getMedicines(`${result.diseaseName} ${result.diseaseNameHi ?? ""}`) : null;
   const diseaseName  = lang === "hi" ? result?.diseaseNameHi  : result?.diseaseName;
   const description  = lang === "hi" ? result?.descriptionHi  : result?.description;
   const symptoms     = lang === "hi" ? result?.symptomsHi     : result?.symptoms;
@@ -387,6 +435,38 @@ export default function Home() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Where to Buy */}
+            {medicines && !result?.isHealthy && (
+              <Card className="border-primary/25 shadow-sm bg-primary/3">
+                <CardContent className="p-5 sm:p-6">
+                  <h4 className="font-bold text-foreground text-base flex items-center gap-2 border-b pb-3 mb-4">
+                    <ShoppingBag className="w-5 h-5 text-primary" />
+                    {tx.whereToBuy}
+                  </h4>
+
+                  <div className="space-y-3 mb-4">
+                    {medicines.map((med, i) => (
+                      <div key={i} className="flex items-center justify-between gap-3 bg-background rounded-lg px-4 py-3 border border-border/60">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                          <span className="font-semibold text-sm text-foreground">{med.name}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-sm font-bold text-primary whitespace-nowrap">
+                          <IndianRupee className="w-3.5 h-3.5" />
+                          <span>{med.price.replace("₹", "")}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-start gap-2 bg-amber-50 border border-amber-200/70 rounded-lg px-4 py-3 text-sm text-amber-800">
+                    <ShoppingBag className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+                    <p>{tx.whereToBuyDesc}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Secondary language panel */}
             {(altDesc || (altSymptoms && altSymptoms.length > 0) || altTreatment) && (
