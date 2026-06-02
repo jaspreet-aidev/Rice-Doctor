@@ -1,4 +1,4 @@
-# Rice Doctor 🌾
+
 
 AI-powered rice disease detector
 for Indian farmers.
@@ -39,3 +39,11 @@ Treatment: Chemical + Organic options
 → Offline Android app
 → Real farmer testing
 → Research paper
+
+## Day 3 Update — June 1, 2026
+→ Added "Where to Buy" medicine section
+→ Shows Indian medicine brands
+→ Prices in rupees
+→ Available in Hindi + English
+→ Farmers now know exactly what
+  to buy from local Krishi Kendra# Rice Doctor 🌾
