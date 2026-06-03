@@ -81,3 +81,44 @@ Kisan Mitra now works for:
 ✅ Illiterate farmers (hear results)
 ✅ Elderly farmers (big buttons)
 ✅ All basic Android phones
+
+## Day 5 Update — June 3, 2026
+
+### Live Camera Feature Added
+→ Real-time camera viewfinder in app
+→ Farmer points phone at rice leaf
+→ Taps big circular capture button
+→ No need to navigate phone gallery
+→ Reduced steps from 4 to 2
+
+### Camera Instructions Added
+→ "Hold phone 20cm from leaf"
+→ "Make sure leaf fills the frame"
+→ Shown in Hindi and English
+→ Helps farmers get accurate results
+
+### Technical Implementation
+→ getUserMedia API (built into browser)
+→ Zero additional cost
+→ Works on basic Android phones
+→ Falls back to file upload if
+  camera not available
+→ Real-time preview before scanning
+
+### Why This Matters
+Rural farmers unfamiliar with
+smartphones struggle with file
+navigation. Live camera reduces
+interaction complexity significantly.
+Direct camera access means faster
+diagnosis in the field.
+
+### App Features Complete
+✅ AI disease detection (PlantNet)
+✅ Hindi + English language switch
+✅ Voice output (illiterate farmers)
+✅ Color coded urgency warnings
+✅ Where to Buy medicine (₹ prices)
+✅ Live camera capture
+✅ Big accessible buttons
+✅ Treatment plan (Chemical + Organic)
