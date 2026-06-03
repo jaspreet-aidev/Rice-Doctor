@@ -47,3 +47,37 @@ Treatment: Chemical + Organic options
 → Available in Hindi + English
 → Farmers now know exactly what
   to buy from local Krishi Kendra# Rice Doctor 🌾
+
+  
+## Day 4 Update — June 2, 2026
+
+### Farmer Accessibility Features Added
+→ Voice output in Hindi using Web Speech API
+  Farmer HEARS diagnosis — no reading needed
+→ Bigger buttons for rough farmer hands
+→ Simplified Hindi — village level language
+→ Color coded urgency banners:
+  🔴 RED = Treat urgently within 2 days
+  🟡 YELLOW = Treat within a week
+  🟢 GREEN = Healthy, no treatment needed
+
+### Why This Matters
+Many rural Indian farmers cannot read.
+Voice output means the app speaks the
+diagnosis out loud in Hindi.
+First free app to do this for
+Indian rice farmers specifically.
+
+### Technical Implementation
+→ Web Speech API (built into browser)
+→ Zero additional cost
+→ Works offline after page loads
+→ Hindi voice synthesis
+→ Automatic trigger on disease detection
+
+### Impact
+Kisan Mitra now works for:
+✅ Literate farmers (read results)
+✅ Illiterate farmers (hear results)
+✅ Elderly farmers (big buttons)
+✅ All basic Android phones
