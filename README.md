@@ -122,3 +122,9 @@ diagnosis in the field.
 ✅ Live camera capture
 ✅ Big accessible buttons
 ✅ Treatment plan (Chemical + Organic)
+
+## User Research
+Special thanks to [friend's name]
+for field UX research identifying
+5 critical improvements for
+rural farm conditions.
