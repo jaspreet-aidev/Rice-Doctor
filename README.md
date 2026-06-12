@@ -128,3 +128,24 @@ Special thanks to [friend's name]
 for field UX research identifying
 5 critical improvements for
 rural farm conditions.
+
+## Development Pause — June 5-12, 2026
+
+Took a short break due to illness.
+During this time, focused on:
+→ Learning model training on
+  Google Colab
+→ Studying TensorFlow Lite
+  compression techniques
+→ Planning Project 2 (Bag Counter)
+  and Project 3 (Housing Detector)
+
+## Day 6 Update — June 13, 2026
+→ Implemented friend's UX feedback:
+  - Image compression before upload
+  - 70% confidence threshold
+  - Step-by-step progress text
+  - Sunlight contrast improvements
+  - Camera target box overlay
+→ Began training custom rice
+  disease model on Colab
