@@ -149,3 +149,7 @@ During this time, focused on:
   - Camera target box overlay
 → Began training custom rice
   disease model on Colab
+
+
+### 3gb hardware constraint solved 
+i trained a model n conet it into a small tfile which work flawlessly with and 3gb hardware 
