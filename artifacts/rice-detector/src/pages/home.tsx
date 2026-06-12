@@ -141,6 +141,7 @@ type Lang = "en" | "hi";
 const ui = {
   en: {
     appName: "Kisan Mitra", appSubtitle: "Rice crop field companion", langToggle: "हिंदी",
+    scansCompleted: (n: number) => `🌾 ${n} scan${n === 1 ? "" : "s"} completed`,
     useCamera: "Open Live Camera", useGallery: "Choose from Gallery",
     uploadTitle: "Scan a rice leaf", uploadDesc: "Use the live camera or pick a photo from your gallery.",
     compressing: "Optimizing photo…",
@@ -175,6 +176,7 @@ const ui = {
   },
   hi: {
     appName: "किसान मित्र", appSubtitle: "धान की फसल का साथी", langToggle: "English",
+    scansCompleted: (n: number) => `🌾 ${n} जांच पूर्ण`,
     useCamera: "लाइव कैमरा खोलो", useGallery: "गैलरी से फोटो चुनो",
     uploadTitle: "धान के पत्ते की जांच करो", uploadDesc: "लाइव कैमरे से फोटो लो या गैलरी से फोटो चुनो।",
     compressing: "फोटो तैयार हो रही है…",
@@ -226,6 +228,10 @@ type AppState = "chooser" | "compressing" | "camera" | "preview" | "loading" | "
 export default function Home() {
   const [lang, setLang] = useState<Lang>("en");
   const [appState, setAppState] = useState<AppState>("chooser");
+  const [scanCount, setScanCount] = useState<number>(() => {
+    const stored = localStorage.getItem("kisan_mitra_scans");
+    return stored ? parseInt(stored, 10) : 0;
+  });
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -345,6 +351,10 @@ export default function Home() {
         { data: { imageBase64: dataUrl.split(",")[1], mimeType: "image/jpeg" } },
         {
           onSuccess: (data) => {
+            // Increment scan counter in localStorage
+            const next = scanCount + 1;
+            setScanCount(next);
+            localStorage.setItem("kisan_mitra_scans", String(next));
             // Confidence threshold: if plantNetScore < 0.7, show low-confidence screen
             if (data.plantNetScore !== null && data.plantNetScore !== undefined && data.plantNetScore < 0.7) {
               setAppState("low_confidence");
@@ -443,6 +453,15 @@ export default function Home() {
           </button>
         </div>
       </header>
+
+      {/* Scan counter strip */}
+      {scanCount > 0 && (
+        <div className="bg-primary/8 border-b border-primary/15 py-1.5 px-4 text-center">
+          <p className="text-xs font-bold text-primary/80 tracking-wide">
+            {tx.scansCompleted(scanCount)}
+          </p>
+        </div>
+      )}
 
       <main className="max-w-xl mx-auto px-3 mt-5">
 
