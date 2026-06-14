@@ -153,3 +153,68 @@ During this time, focused on:
 
 ### 3gb hardware constraint solved 
 i trained a model n conet it into a small tfile which work flawlessly with and 3gb hardware 
+
+## Major Update — June 14, 2026 🚀
+
+### Custom AI Model Trained & Deployed
+
+After training on Google Colab,
+I built my OWN rice disease model.
+
+### Model Details
+→ Architecture: MobileNetV2
+→ Training platform: Google Colab
+→ Accuracy: 76%
+→ Original format: .keras
+→ Compressed: TensorFlow Lite
+→ Web format: TensorFlow.js
+→ Files: model.json + 3 weight shards
+
+### Dual AI System Built
+App now attempts to run TWO AIs:
+
+🌐 PlantNet API (Cloud)
+→ Needs internet
+→ Scientific plant database
+→ 70%+ confidence threshold
+
+📱 My MobileNetV2 (On Device)
+→ Trained by me personally
+→ Runs in browser via TF.js
+→ Works offline (no internet!)
+→ Zero API cost forever
+
+### Diseases My Model Detects
+→ Healthy Rice
+→ Brown Spot
+→ Blast Disease
+→ Bacterial Blight
+→ Sheath Blight
+→ Tungro Virus
+→ Sheath Rot
+→ False Smut
+→ Neck Blast
+→ Rice Hispa
+
+### Current Status
+→ Model uploaded to GitHub ✅
+→ Dual AI code integrated ✅
+→ Model loading in progress 🔄
+→ File path fix needed tomorrow
+
+### Technical Journey
+Day 1-5 → Built web app on phone
+Day 6-13 → Learned model training
+           during illness recovery
+Day 14 → Trained MobileNetV2
+          on Google Colab free GPU
+          Achieved 76% accuracy
+          Converted TFLite → TF.js
+          Integrated dual AI system
+
+### Research Note
+This represents a shift from
+API-dependent to hybrid AI:
+combining cloud verification
+with on-device inference for
+true offline capability.
