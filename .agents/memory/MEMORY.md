@@ -1,0 +1,1 @@
+- [TF.js + Keras 3 compatibility](tfjs-keras3-compat.md) — patches for batch_shape, inbound_nodes format, DTypePolicy, custom layer registration, and MobileNetV2 normalization

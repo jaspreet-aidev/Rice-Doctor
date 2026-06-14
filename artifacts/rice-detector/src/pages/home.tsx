@@ -33,7 +33,12 @@ import {
   Microscope,
   Pill,
   Hourglass,
+  Wifi,
+  WifiOff,
+  Brain,
+  SmartphoneNfc,
 } from "lucide-react";
+import { useLocalModel, fileToCanvas, type LocalPrediction } from "@/lib/localModel";
 
 /* ── Image compression ───────────────────────────────────────────── */
 
@@ -142,6 +147,15 @@ const ui = {
   en: {
     appName: "Kisan Mitra", appSubtitle: "Rice crop field companion", langToggle: "हिंदी",
     scansCompleted: (n: number) => `🌾 ${n} scan${n === 1 ? "" : "s"} completed`,
+    modelLoading: "Loading AI models… 🧠",
+    modelReady: "AI ready",
+    cloudAI: "🌐 PlantNet + Cloud AI",
+    localAI: "📱 My AI (Offline)",
+    bothAgree: "✅ Both AIs agree — High Confidence!",
+    aiDisagree: "⚠️ Results differ — check carefully",
+    offlineMode: "📱 Offline Mode — Using My AI Only",
+    offlineResultTitle: "Offline Result",
+    offlineResultDesc: "No internet detected. Showing local AI result. Connect to internet for full treatment plan.",
     useCamera: "Open Live Camera", useGallery: "Choose from Gallery",
     uploadTitle: "Scan a rice leaf", uploadDesc: "Use the live camera or pick a photo from your gallery.",
     compressing: "Optimizing photo…",
@@ -177,6 +191,15 @@ const ui = {
   hi: {
     appName: "किसान मित्र", appSubtitle: "धान की फसल का साथी", langToggle: "English",
     scansCompleted: (n: number) => `🌾 ${n} जांच पूर्ण`,
+    modelLoading: "AI मॉडल लोड हो रहा है… 🧠",
+    modelReady: "AI तैयार",
+    cloudAI: "🌐 PlantNet + क्लाउड AI",
+    localAI: "📱 मेरा AI (ऑफलाइन)",
+    bothAgree: "✅ दोनों AI एक मत हैं — पक्का नतीजा!",
+    aiDisagree: "⚠️ नतीजे अलग हैं — ध्यान से देखो",
+    offlineMode: "📱 ऑफलाइन मोड — सिर्फ मेरा AI",
+    offlineResultTitle: "ऑफलाइन नतीजा",
+    offlineResultDesc: "इंटरनेट नहीं मिला। लोकल AI से नतीजा दिख रहा है। पूरा इलाज जानने के लिए इंटरनेट से जुड़ो।",
     useCamera: "लाइव कैमरा खोलो", useGallery: "गैलरी से फोटो चुनो",
     uploadTitle: "धान के पत्ते की जांच करो", uploadDesc: "लाइव कैमरे से फोटो लो या गैलरी से फोटो चुनो।",
     compressing: "फोटो तैयार हो रही है…",
@@ -221,7 +244,7 @@ const URGENCY_STYLE: Record<Urgency, { bg: string; border: string; icon: React.R
 
 /* ── App state ───────────────────────────────────────────────────── */
 
-type AppState = "chooser" | "compressing" | "camera" | "preview" | "loading" | "result" | "low_confidence" | "error";
+type AppState = "chooser" | "compressing" | "camera" | "preview" | "loading" | "result" | "low_confidence" | "offline_result" | "error";
 
 /* ── Component ───────────────────────────────────────────────────── */
 
@@ -239,6 +262,7 @@ export default function Home() {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [flashCapture, setFlashCapture] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
+  const [localPrediction, setLocalPrediction] = useState<LocalPrediction | null>(null);
 
   const videoRef  = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -246,6 +270,7 @@ export default function Home() {
 
   const tx = ui[lang];
   const detectDisease = useDetectDisease();
+  const { status: modelStatus, predict: localPredict } = useLocalModel();
   const result = detectDisease.data;
   const error  = detectDisease.error;
 
@@ -335,13 +360,27 @@ export default function Home() {
   const handleScan = async () => {
     if (!imageFile) return;
 
-    // Compress first
+    setLocalPrediction(null);
+
+    // Step 1: Compress
     setAppState("compressing");
     const compressed = await compressImage(imageFile, 800, 500);
     setImageFile(compressed);
-    // Refresh preview URL with compressed version
     setSelectedImage(URL.createObjectURL(compressed));
 
+    // Step 2: Run local model prediction in parallel (fast, < 500 ms)
+    let localPred: LocalPrediction | null = null;
+    if (modelStatus === "ready") {
+      try {
+        const canvas = await fileToCanvas(compressed);
+        localPred = await localPredict(canvas);
+        if (localPred) setLocalPrediction(localPred);
+      } catch {
+        // non-fatal — continue with cloud API
+      }
+    }
+
+    // Step 3: Call cloud API
     setAppState("loading");
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -351,18 +390,24 @@ export default function Home() {
         { data: { imageBase64: dataUrl.split(",")[1], mimeType: "image/jpeg" } },
         {
           onSuccess: (data) => {
-            // Increment scan counter in localStorage
             const next = scanCount + 1;
             setScanCount(next);
             localStorage.setItem("kisan_mitra_scans", String(next));
-            // Confidence threshold: if plantNetScore < 0.7, show low-confidence screen
             if (data.plantNetScore !== null && data.plantNetScore !== undefined && data.plantNetScore < 0.7) {
               setAppState("low_confidence");
             } else {
               setAppState("result");
             }
           },
-          onError: () => setAppState("error"),
+          onError: () => {
+            // Offline fallback: if local model ran successfully, show offline result
+            if (localPred) {
+              setLocalPrediction(localPred);
+              setAppState("offline_result");
+            } else {
+              setAppState("error");
+            }
+          },
         }
       );
     };
@@ -399,6 +444,7 @@ export default function Home() {
   const resetScan = () => {
     stopStream(); setStream(null);
     setSelectedImage(null); setImageFile(null); setCameraError(null);
+    setLocalPrediction(null);
     detectDisease.reset();
     window.speechSynthesis?.cancel();
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -407,6 +453,7 @@ export default function Home() {
 
   const retake = () => {
     setSelectedImage(null); setImageFile(null);
+    setLocalPrediction(null);
     detectDisease.reset();
     setAppState("chooser");
   };
@@ -468,6 +515,18 @@ export default function Home() {
         {/* ── Chooser ── */}
         {appState === "chooser" && (
           <div className="animate-in fade-in zoom-in duration-300 space-y-3">
+            {/* Model loading / ready badge */}
+            <div className={`flex items-center gap-2.5 rounded-xl px-4 py-2.5 border-2 text-sm font-bold ${
+              modelStatus === "loading" ? "bg-amber-50 border-amber-300 text-amber-800" :
+              modelStatus === "ready"   ? "bg-green-50 border-green-300 text-green-800" :
+                                         "bg-muted border-border text-foreground/60"
+            }`}>
+              {modelStatus === "loading" && <Brain className="w-4 h-4 shrink-0 animate-pulse" />}
+              {modelStatus === "ready"   && <SmartphoneNfc className="w-4 h-4 shrink-0" />}
+              {modelStatus === "error"   && <WifiOff className="w-4 h-4 shrink-0" />}
+              <span>{modelStatus === "loading" ? tx.modelLoading : modelStatus === "ready" ? `${tx.modelReady} ✓` : "Local AI not available"}</span>
+            </div>
+
             {cameraError && (
               <div className="flex items-center gap-3 bg-amber-50 border-2 border-amber-300 rounded-xl px-4 py-3 text-amber-900 text-sm font-semibold">
                 <CameraOff className="w-5 h-5 shrink-0 text-amber-700" />
@@ -687,13 +746,101 @@ export default function Home() {
           </div>
         )}
 
+        {/* ── Offline result ── */}
+        {appState === "offline_result" && localPrediction && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 space-y-4">
+            {/* Offline mode banner */}
+            <div className="bg-amber-50 border-4 border-amber-400 rounded-2xl px-5 py-4 flex items-center gap-4">
+              <WifiOff className="w-8 h-8 text-amber-700 shrink-0" />
+              <div className="flex-1">
+                <p className="text-lg font-extrabold text-amber-900">{tx.offlineMode}</p>
+                <p className="text-sm font-semibold text-amber-800 mt-0.5">{tx.offlineResultDesc}</p>
+              </div>
+            </div>
+
+            {/* Local AI result card */}
+            <Card className="border-2 border-primary/30 shadow-sm overflow-hidden">
+              <div className="bg-primary/8 border-b-2 border-primary/20 px-4 py-2.5 flex items-center gap-2">
+                <SmartphoneNfc className="w-4 h-4 text-primary" />
+                <span className="text-sm font-extrabold text-primary">{tx.localAI}</span>
+              </div>
+              <CardContent className="p-5 space-y-3">
+                {/* Preview image */}
+                {selectedImage && (
+                  <div className="w-full rounded-xl overflow-hidden" style={{ aspectRatio: "4/3" }}>
+                    <img src={selectedImage} alt="Crop" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                {/* Disease name */}
+                <div className={`rounded-2xl px-5 py-5 flex items-center gap-4 ${
+                  localPrediction.isHealthy
+                    ? "bg-green-50 border-4 border-green-400"
+                    : "bg-red-50 border-4 border-red-400"
+                }`}>
+                  <span className="text-4xl">{localPrediction.isHealthy ? "✅" : "⚠️"}</span>
+                  <div>
+                    <p className="text-xl font-extrabold text-foreground">
+                      {lang === "hi" ? localPrediction.classNameHi : localPrediction.className}
+                    </p>
+                    <p className="text-sm font-bold text-foreground/70 mt-0.5">
+                      {lang === "hi" ? localPrediction.className : localPrediction.classNameHi}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <div className="flex-1 h-2.5 bg-foreground/15 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${localPrediction.confidence > 0.75 ? "bg-green-500" : localPrediction.confidence > 0.5 ? "bg-amber-500" : "bg-red-500"}`}
+                          style={{ width: `${Math.round(localPrediction.confidence * 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-extrabold text-foreground/70 shrink-0">
+                        {Math.round(localPrediction.confidence * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                {/* Voice button */}
+                <button
+                  onClick={() => speakHindi(localPrediction.isHealthy
+                    ? "आपकी फसल बिल्कुल ठीक है।"
+                    : `आपकी फसल में ${localPrediction.classNameHi} बीमारी है।`
+                  )}
+                  className="w-full bg-primary/10 border-2 border-primary/35 text-primary rounded-xl font-bold text-lg flex items-center justify-center gap-2 active:bg-primary/20"
+                  style={{ minHeight: 60 }}>
+                  <Volume2 className="w-6 h-6" /> {tx.speakBtn}
+                </button>
+                {/* Note about internet */}
+                <div className="flex items-start gap-3 bg-blue-50 border-2 border-blue-200 rounded-xl px-4 py-3">
+                  <Wifi className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                  <p className="text-sm font-semibold text-blue-800 leading-relaxed">
+                    {lang === "hi"
+                      ? "पूरा इलाज, दवाई की जानकारी और PlantNet जांच के लिए इंटरनेट से जुड़कर दोबारा जांच करो।"
+                      : "Connect to internet and scan again for full treatment plan, medicines list, and PlantNet verification."}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Retry with internet / scan another */}
+            <button onClick={handleScan}
+              className="w-full bg-primary text-primary-foreground rounded-2xl font-extrabold text-xl flex items-center justify-center gap-3 shadow-md active:opacity-90"
+              style={{ minHeight: 76 }}>
+              <Wifi className="w-6 h-6" /> {lang === "hi" ? "इंटरनेट से दोबारा जांच करो" : "Retry with Internet"}
+            </button>
+            <button onClick={resetScan}
+              className="w-full border-2 border-border rounded-xl font-bold text-lg text-foreground bg-background flex items-center justify-center active:bg-muted"
+              style={{ minHeight: 60 }}>
+              {tx.newPhoto}
+            </button>
+          </div>
+        )}
+
         {/* ── Error ── */}
         {appState === "error" && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 space-y-3">
             <Alert variant="destructive" className="border-2">
               <AlertCircle className="h-6 w-6" />
               <AlertTitle className="text-xl font-extrabold">{tx.errorTitle}</AlertTitle>
-              <AlertDescription className="text-base font-semibold mt-1">{error?.error || tx.errorDesc}</AlertDescription>
+              <AlertDescription className="text-base font-semibold mt-1">{tx.errorDesc}</AlertDescription>
             </Alert>
             <button onClick={handleScan}
               className="w-full bg-destructive text-white rounded-xl font-bold text-xl flex items-center justify-center gap-2 active:opacity-90"
@@ -724,6 +871,58 @@ export default function Home() {
                 </p>
               </div>
             </div>
+
+            {/* Dual AI comparison card */}
+            {localPrediction && (
+              <Card className="border-2 border-primary/30 shadow-sm overflow-hidden">
+                <div className="bg-primary/8 border-b-2 border-primary/20 px-4 py-2.5 flex items-center gap-2">
+                  <Brain className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-extrabold text-primary">Dual AI Check</span>
+                </div>
+                <CardContent className="p-4 space-y-3">
+                  {/* Cloud AI row */}
+                  <div className="flex items-center justify-between gap-3 bg-blue-50 border-2 border-blue-200 rounded-xl px-3.5 py-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Wifi className="w-4 h-4 text-blue-600 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-blue-700">{tx.cloudAI}</p>
+                        <p className="text-sm font-extrabold text-blue-900 truncate">{lang === "hi" ? result?.diseaseNameHi ?? result?.diseaseName : result?.diseaseName}</p>
+                      </div>
+                    </div>
+                    {result?.plantNetScore != null && (
+                      <span className="text-sm font-extrabold text-blue-700 shrink-0">{Math.round(result.plantNetScore * 100)}%</span>
+                    )}
+                  </div>
+                  {/* Local AI row */}
+                  <div className="flex items-center justify-between gap-3 bg-green-50 border-2 border-green-200 rounded-xl px-3.5 py-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <SmartphoneNfc className="w-4 h-4 text-green-600 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-green-700">{tx.localAI}</p>
+                        <p className="text-sm font-extrabold text-green-900 truncate">
+                          {lang === "hi" ? localPrediction.classNameHi : localPrediction.className}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-extrabold text-green-700 shrink-0">{Math.round(localPrediction.confidence * 100)}%</span>
+                  </div>
+                  {/* Agreement indicator */}
+                  {(() => {
+                    const cloudName = result?.diseaseName?.toLowerCase() ?? "";
+                    const localName = localPrediction.className.toLowerCase();
+                    const agree = cloudName.includes(localName.split(" ")[0]) || localName.includes(cloudName.split(" ")[0]);
+                    return (
+                      <div className={`flex items-center gap-2 rounded-xl px-3.5 py-2.5 border-2 text-sm font-bold ${
+                        agree ? "bg-green-50 border-green-300 text-green-800" : "bg-amber-50 border-amber-300 text-amber-800"
+                      }`}>
+                        {agree ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertTriangle className="w-4 h-4 shrink-0" />}
+                        {agree ? tx.bothAgree : tx.aiDisagree}
+                      </div>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Speak again */}
             <button onClick={handleSpeakAgain}
