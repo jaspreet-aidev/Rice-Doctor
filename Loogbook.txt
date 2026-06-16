@@ -95,3 +95,23 @@ Day 1-5 → Built web app on phone Day 6-13 → Learned model training during il
 
 Research Note
 This represents a shift from API-dependent to hybrid AI: combining cloud verification with on-device inference for true offline capability.
+
+
+### **[Logbook Entry: June 16, 2026]**
+**Project:** Rice Doctor App
+**Topic:** Cloud Deployment & CI/CD Pipeline Troubleshooting
+**Summary:** Initiated deployment of the application from GitHub to Netlify. Encountered several build-time configuration conflicts resulting from differences between local development (Replit) and production environments.
+**Errors Encountered & Solutions Applied:**
+ * **Issue 1: Missing Environment Variables**
+   * *Error:* Build failed with PORT environment variable is required.
+   * *Solution:* Modified vite.config.ts to use "fallback" logic. Instead of crashing when the variable was missing, added || '3000' and || '/' to allow the build to proceed with default values.
+ * **Issue 2: Incorrect Deployment Target**
+   * *Error:* Netlify deployed the testing "Component Preview" page instead of the main application.
+   * *Solution:* Updated Netlify "Build & Deploy" settings. Cleared the Base directory (set to empty) and updated the Publish directory to dist to point to the correct root build output.
+ * **Issue 3: Invalid Build Command**
+   * *Error:* Unknown option: 'recursive' in pnpm logs.
+   * *Solution:* Simplified the build command in Netlify settings from a complex workspace filter to a standard pnpm run build.
+ * **Issue 4: TypeScript Build Failures (Pending)**
+   * *Error:* tsc compiler exiting with code 2 during the typecheck phase.
+   * *Solution Plan:* Scheduled for tomorrow. Plan to modify package.json to remove the strict tsc (TypeScript compiler) type-check step from the build command to ensure the deployment completes successfully.
+
