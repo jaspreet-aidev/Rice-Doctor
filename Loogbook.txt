@@ -115,3 +115,24 @@ This represents a shift from API-dependent to hybrid AI: combining cloud verific
    * *Error:* tsc compiler exiting with code 2 during the typecheck phase.
    * *Solution Plan:* Scheduled for tomorrow. Plan to modify package.json to remove the strict tsc (TypeScript compiler) type-check step from the build command to ensure the deployment completes successfully.
 
+
+
+📅 FIELD NOTES: ENGINEERING SPRINT LOG
+Date: June 17, 2026
+Engineer: Jaspreet
+Project: Kisan Mitra (RiceDoctor-EdgeAI)
+🎯 OBJECTIVE OF THE DAY:
+Establish the public "Proof of Work" architecture by migrating the core Edge-AI training pipeline from local/Google Colab environments to a public GitHub repository. The goal is to document the "Distance Traveled" from the initial 47% baseline to the 76% production-ready model.
+⚠️ CONSTRAINTS & ROADBLOCKS ENCOUNTERED:
+The Base64 Output Bloat: Attempted to upload the MobileNetV2_End_to_End_Training.ipynb directly to GitHub. The upload repeatedly failed, throwing a "We can't process this file" error.
+Root Cause Analysis: Identified that Jupyter Notebooks save visual outputs (graphs, leaf images) as massive Base64 text strings, which artificially inflated the file size to over 15MB and crashed the constrained mobile browser connection (Moto G85 cast to TV).
+API Handshake Failure: Attempted the "Save a copy to GitHub" direct API link from Google Colab, but the mobile browser's background protocols blocked the handshake.
+⚙️ ACTIONS TAKEN (THE ENGINEER'S BYPASS):
+Output Purge: Executed a hard wipe of all visual outputs (Edit -> Clear all outputs) inside Google Colab to strip the Base64 bloat and reduce the file to pure mathematical logic.
+Direct Injection Protocol: Completely bypassed the failing UI upload buttons. Translated the pipeline into pure Python logic, opened GitHub's native text editor, and directly injected the code into a new file: MobileNetV2_End_to_End_Training.py.
+📈 RESULTS & COMMITS:
+Successfully bypassed hardware upload limits and secured the master training code in version control.
+Commit Executed: Add raw Python script for end-to-end MobileNetV2 training pipeline via direct text injection
+The pipeline now accurately documents the transition from a noisy/corrupted dataset (47% initial accuracy) to the clean, real-world agricultural dataset resulting in the 76% accuracy baseline.
+🔜 NEXT STEPS FOR TOMORROW:
+Execute the identical "Direct Injection" protocol for the historical failure/audit files (MobileNetV2_v1_Baseline_47_Acc.py and MobileNetV2_v2_Data_Audit.py) to fully document the Data Science Root Cause Analysis.
