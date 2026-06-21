@@ -47,3 +47,6 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Ignore TFJS model files (we switched to cloud API)
+.artifacts/rice-detector/public/model/
